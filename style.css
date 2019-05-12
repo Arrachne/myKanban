@@ -1,0 +1,103 @@
+body {
+    background: url('background.png');
+    background-size: 100%; 
+    margin: 0;
+    font-family: Montserrat;
+}
+
+.kanban {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    overflow-x: auto;
+    height: 100vh;
+    width: 100%;
+
+    
+    font-style: normal;    
+    font-size: 13px;
+    line-height: 19px;
+    /* identical to box height, or 146% */
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    flex: 1, 1, auto;
+    margin: 10px;
+    min-width: 272px;
+    max-width: 25%;
+    max-height: 95%;
+    background: #DFE3E6;
+    border-radius: 3px;
+}
+
+.col-name {
+    margin: 4px 12px;
+    font-weight: bold;
+}
+
+.column-inner {
+    display: flex;
+    flex-direction: column;
+    flex: 1, 1, auto;
+    overflow-y: auto;
+}
+
+.task {
+    margin: 4px 12px;
+    padding: 4px 12px;
+    background: #FFFFFF;
+    box-shadow: 0px 1px 4px rgba(9, 45, 66, 0.25);
+    border-radius: 3px;
+
+    word-wrap: break-word;
+}
+
+textarea {
+    border: none;
+    width: 100%;
+    height: 100%;
+    color: #B8B9BB;
+}
+
+.add-task {
+    margin: 4px 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    min-height: 43px;
+}
+
+.add-task-offer {
+    border: none;
+    background: #DFE3E6;
+    width: 100%;
+    height: 100%;
+    text-align: left;
+}
+
+.add-task-confirm {
+    background: #39C071; 
+    font-weight: bold;
+    border: none;
+    color: #FFFFFF;
+    border-radius: 3px;
+    padding: 8px;
+}
+
+.add-task-reject {
+    padding: 8px;
+    border: none;
+}
+
+
+.plus {
+    background: #6B808C;
+}
+
+
+
+
+
