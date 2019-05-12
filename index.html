@@ -6,7 +6,8 @@
     </head>
     <body>
         <div class="kanban">
-            <div class="column">
+
+            <!-- <div class="column">
                 <div class="col-name">its a column</div>
                 <div class="column-inner">
                     <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
@@ -33,28 +34,38 @@
                     <button class="add-task-offer">+ добавить еще одну карточку</button>                    
                 </div>
             </div>
+
             <div class="column">
                     <div class="col-name">another column</div>
-                    <div class="task">task3</div>
-                    <div class="task">
-                        <textarea name="browser" rows="2">Введите название карточки</textarea>
-                    </div>
-                    
+                    <div class="task">task3</div>                    
                     <div class="add-task">
+                        <div class="new-task">
+                            <textarea name="card-name" rows="2">Введите название карточки</textarea>
+                        </div>
                         <button class="add-task-confirm">Добавить карточку</button>
                         <button class="add-task-reject">X</button>
                     </div>
             </div>
+
+            <div class="column">                    
+                    <div class="add-task">
+                        <div class="new-task">
+                            <textarea name="column-name" rows="1">Введите название колонки</textarea>
+                        </div>
+                        <button class="add-task-confirm">Добавить колонку</button>
+                        <button class="add-task-reject">X</button>
+                    </div>
+            </div> -->
             <div class="column">
-                    <div class="col-name">another column</div>
-                    <div class="task">task3</div>
-                    <div class="add-task">+ добавить еще одну карточку</div>
-            </div>
-            <div class="column">
-                    <div class="col-name">another column</div>
-                    <div class="task">task3</div>
-                    <div class="add-task">+ добавить еще одну карточку</div>
-            </div>
+                    <div class="add-task">
+                        <button class="add-task-offer add-column">+ добавить еще одну колонку</button>         
+                        <div class="new-task">
+                                <textarea name="column-name" rows="1">Введите название колонки</textarea>
+                        </div>
+                        <button class="add-task-confirm">Добавить колонку</button>
+                        <button class="add-task-reject">X</button>
+                    </div>
+            </div>            
         </div>
         <script src="script.js"></script>
     </body>
