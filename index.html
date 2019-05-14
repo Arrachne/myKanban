@@ -3,6 +3,27 @@
     <head>
         <link rel="stylesheet" href="style.css">
         <title>Kanban</title>
+        <script type="text/template" id="formCreate">
+            <div class="add-task">
+                    <button class="add-task-offer {{classType}}">+ добавить еще одну {{entityType}}</button>         
+                    <div class="new-task new-column">
+                            <textarea class ="columnName" name="column-name" rows="1" placeholder='Введите название колонки'></textarea>
+                    </div>
+                    <button class="add-task-confirm add-column-confirm">Добавить колонку</button>
+                    <button class="add-task-reject">X</button>
+            </div>
+        </script>
+        <script type="text/template" id="formCreateInner">
+                <button class="add-task-offer {{classType}}">+ добавить еще одну {{entityType}}</button>         
+                <div class="new-task new-column">
+                    <textarea class ="columnName" name="column-name" rows="1" placeholder='Введите название колонки'></textarea>
+                </div>
+                <button class="add-task-confirm add-column-confirm">Добавить колонку</button>
+                <button class="add-task-reject">X</button>
+        </script>
+        <script type="text/template" id="task">
+            <div class="task"></div>
+        </script>
     </head>
     <body>
         <div class="kanban">
@@ -60,7 +81,7 @@
                     <div class="add-task">
                         <button class="add-task-offer add-column">+ добавить еще одну колонку</button>         
                         <div class="new-task">
-                                <textarea name="column-name" rows="1">Введите название колонки</textarea>
+                                <textarea class ="columnName" name="column-name" rows="1" placeholder='Введите название колонки'></textarea>
                         </div>
                         <button class="add-task-confirm">Добавить колонку</button>
                         <button class="add-task-reject">X</button>
