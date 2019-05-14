@@ -1,34 +1,42 @@
 var addColBtn = document.querySelector(".add-column");
-var rejectAddBtn = document.querySelector(".add-task-reject");
-var addColConfirmBtn = document.querySelector(".add-task-confirm");
+var rejectAddBtn = document.querySelector(".add-element-reject");
+var addColConfirmBtn = document.querySelector(".add-element-confirm");
 var kanban = document.querySelector(".kanban");
 
 
 var addNewColumnOffer = function () {
     newColForm = this.parentNode;
-    hide(newColForm, ".add-task-offer");
-    show(newColForm, ".new-task");
-    show(newColForm, ".add-task-confirm");
-    show(newColForm, ".add-task-reject");        
+    hide(newColForm, ".add-element-offer");
+    show(newColForm, ".new-element");
+    show(newColForm, ".add-element-confirm");
+    show(newColForm, ".add-element-reject");        
 };
 
 var rejectAddingColumn = function () {
     newColForm = this.parentNode;
-    show(newColForm, ".add-task-offer");
-    hide(newColForm, ".new-task");
-    clear(newColForm, ".columnName");
-    hide(newColForm, ".add-task-confirm");
-    hide(newColForm, ".add-task-reject");
+    show(newColForm, ".add-element-offer");
+    hide(newColForm, ".new-element");
+    clear(newColForm, ".elementName");
+    hide(newColForm, ".add-element-confirm");
+    hide(newColForm, ".add-element-reject");
 };
 
 var compileCreateForm = function (formHTML, entityType) {
+    let compiled = '';
     switch(entityType) {
         case 'task': 
-            return formHTML.replace('{{classType}}', 'adding-task').replace('{{entityType}}', 'карточку');
+            compiled = formHTML.replace(/{{classType}}/gmi, 'task');
+            compiled = compiled.replace(/{{entityType}}/gmi, 'карточку');
+            compiled = compiled.replace(/{{entityTypeGenitive}}/gmi, 'карточки');
+            compiled = compiled.replace(/{{rowsCount}}/gmi, '2');
+            break;
         default:
-            return formHTML.replace('{{classType}}', 'add-column').replace('{{entityType}}', 'колонку');
+            compiled = formHTML.replace(/{{classType}}/gmi, 'column');
+            compiled = compiled.replace(/{{entityType}}/gmi, 'колонку');
+            compiled = compiled.replace(/{{entityTypeGenitive}}/gmi, 'колонки');
+            compiled = compiled.replace(/{{rowsCount}}/gmi, '1');
     };    
-    
+    return compiled
 };
 
 var createNewCol = function () {
@@ -46,39 +54,58 @@ var addNewColumn = function () {
     // создать имя колонки    
     colName = document.createElement('div');
     colName.classList.add("col-name");
-    colName.textContent = thisCol.querySelector(".columnName").value; 
-    a = thisCol.firstChild;
+    colName.textContent = thisCol.querySelector(".elementName").value; 
     thisCol.insertBefore(colName, thisCol.firstChild);
 
     // поменять форму создания на создание таска
-    thisCol.querySelector('.add-task').innerHTML = compileCreateForm(document.getElementById('formCreateInner').innerHTML, 'task');
+    thisCol.querySelector('.add-element').innerHTML = compileCreateForm(document.getElementById('formCreateInner').innerHTML, 'task');
 
     // аппендить новую пустую колонку
     createNewCol();
 };
 
+var addNewTask = function () {
+    // debugger;
+    // контейннер для тасков
+    colInner = this.parentNode.previousElementSibling;
+
+    
+
+    // создать и вставить таск в колонку
+    task = document.createElement('div');
+    task.classList.add("task");
+    task.textContent = thisCol.querySelector(".elementName").value; 
+    colInner.appendChild(task);
+
+    rejectAddingColumn.apply(this.parentNode.querySelector(".add-element-reject"));
+    
+};
 
 kanban.onclick = function(event) {
     // debugger;
     var target = event.target; // где был клик?
 
-    if (target.classList.contains('add-column')) {
+    if (target.classList.contains('add-element-offer')) {
         addNewColumnOffer.apply(target);
+        return;
     };
 
-    if (target.classList.contains('add-task-reject')) {
+    if (target.classList.contains('add-element-reject')) {
         rejectAddingColumn.apply(target);
+        return;
+    };
+
+    if (target.classList.contains('add-column-confirm')) {
+        addNewColumn.apply(target);
+        return;
     };
 
     if (target.classList.contains('add-task-confirm')) {
-        addNewColumn.apply(target);
+        addNewTask.apply(target);
+        return;
     };
   
   };  
-
-// addColBtn.addEventListener('click', addNewColumnOffer);
-// rejectAddBtn.addEventListener('click', rejectAddingColumn);
-// addColConfirmBtn.addEventListener('click', addNewColumn);
 
 function show(element, childSelector) { 
     element.querySelector(childSelector).style.display = 'block'; 

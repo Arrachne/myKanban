@@ -36,12 +36,13 @@ body {
 .col-name {
     margin: 4px 12px;
     font-weight: bold;
+    word-wrap: break-word;
 }
 
 .column-inner {
     display: flex;
     flex-direction: column;
-    flex: 1, 1, auto;
+    /* flex: 1, 1, auto; */
     overflow-y: auto;
 }
 
@@ -61,7 +62,7 @@ textarea {
     color: #B8B9BB;
 }
 
-.add-task {
+.add-element {
     margin: 4px 12px;
     display: flex;
     flex-flow: row wrap;
@@ -70,7 +71,7 @@ textarea {
     min-height: 43px;
 }
 
-.add-task-offer {
+.add-element-offer {
     border: none;
     background: #DFE3E6;
     width: 100%;
@@ -80,7 +81,7 @@ textarea {
     margin: auto;
 }
 
-.new-task {
+.new-element {
     /* flex-basis: inherit; */
     flex: 1 0 auto;
     margin: 8px 0;
@@ -93,7 +94,7 @@ textarea {
     display: none;
 }
 
-.add-task-confirm {
+.add-element-confirm {
     background: #39C071; 
     font-weight: bold;
     border: none;
@@ -104,12 +105,12 @@ textarea {
     display: none;
 }
 
-.add-task-reject {
+.add-element-reject {
     padding: 8px;
     border: none;
     display: none;
+    background: #DFE3E6;
 }
-
 
 .plus {
     background: #6B808C;
