@@ -37,12 +37,14 @@ body {
     margin: 4px 12px;
     font-weight: bold;
     word-wrap: break-word;
+    max-height: 4rem;
+    overflow-y: auto;
 }
 
 .column-inner {
     display: flex;
     flex-direction: column;
-    /* flex: 1, 1, auto; */
+    flex: 0 20 auto;
     overflow-y: auto;
 }
 
