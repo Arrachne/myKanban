@@ -4,23 +4,27 @@
         <link rel="stylesheet" href="style.css">
         <title>Kanban</title>
         <script type="text/template" id="formCreate">
-            <div class="column-inner"></div>
+            <!-- <div class="column-inner"></div> -->
             <div class="add-element">
                     <button class="add-element-offer add-{{classType}}">+ добавить еще одну {{entityType}}</button>         
-                    <div class="new-element new-{{classType}}">
+                    <div class="new-element hideBlock">
                             <textarea class ="elementName" name="element-name" rows="{{rowsCount}}" placeholder='Введите название {{entityTypeGenitive}}'></textarea>
                     </div>
-                    <button class="add-element-confirm add-{{classType}}-confirm">Добавить {{entityType}}</button>
-                    <button class="add-element-reject">X</button>
+                    <div class="buttons hideBlock">
+                        <button class="add-element-confirm add-{{classType}}-confirm">Добавить {{entityType}}</button>
+                        <button class="add-element-reject">X</button>
+                    </div>    
             </div>
         </script>
         <script type="text/template" id="formCreateInner">
-            <button class="add-element-offer add-{{classType}}">+ добавить еще одну {{entityType}}</button>         
-            <div class="new-element new-{{classType}}">
-                <textarea class ="elementName" name="{{classType}}-name" rows="{{rowsCount}}" placeholder='Введите название {{entityTypeGenitive}}'></textarea>
-            </div>
-            <button class="add-element-confirm add-{{classType}}-confirm">Добавить {{entityType}}</button>
-            <button class="add-element-reject">X</button>
+                    <button class="add-element-offer add-{{classType}}">+ добавить еще одну {{entityType}}</button>         
+                    <div class="new-element hideBlock">
+                            <textarea class ="elementName" name="element-name" rows="{{rowsCount}}" placeholder='Введите название {{entityTypeGenitive}}'></textarea>
+                    </div>
+                    <div class="buttons hideBlock">
+                        <button class="add-element-confirm add-{{classType}}-confirm">Добавить {{entityType}}</button>
+                        <button class="add-element-reject">X</button>
+                    </div>
         </script>
         <script type="text/template" id="task">
             <div class="task"></div>
@@ -28,67 +32,37 @@
     </head>
     <body>
         <div class="kanban">
-
             <!-- <div class="column">
-                <div class="col-name">its a column</div>
-                <div class="column-inner">
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task1 task1 task1 task1 task1 task1 task1 task1 </div>
-                    <div class="task">task2</div>
-                </div>
-                <div class="add-element">
-                    <button class="add-element-offer">+ добавить еще одну карточку</button>                    
-                </div>
-            </div>
-
-            <div class="column">
-                    <div class="col-name">another column</div>
-                    <div class="task">task3</div>                    
-                    <div class="add-element">
-                        <div class="new-element">
-                            <textarea name="card-name" rows="2">Введите название карточки</textarea>
-                        </div>
-                        <button class="add-element-confirm">Добавить карточку</button>
-                        <button class="add-element-reject">X</button>
-                    </div>
-            </div>
-
-            <div class="column">                    
-                    <div class="add-element">
-                        <div class="new-element">
-                            <textarea name="column-name" rows="1">Введите название колонки</textarea>
-                        </div>
-                        <button class="add-element-confirm">Добавить колонку</button>
-                        <button class="add-element-reject">X</button>
-                    </div>
-            </div> -->
-            <div class="column">
-                    <div class="column-inner"></div>
                     <div class="add-element">
                         <button class="add-element-offer add-column">+ добавить еще одну колонку</button>         
-                        <div class="new-element">
+                        <div class="new-element hideBlock">
                                 <textarea class ="elementName" name="column-name" rows="1" placeholder='Введите название колонки'></textarea>
                         </div>
-                        <button class="add-element-confirm add-column-confirm">Добавить колонку</button>
+                        <div class="buttons hideBlock">
+                            <button class="add-element-confirm add-column-confirm">Добавить колонку</button>
+                            <button class="add-element-reject">X</button>                            
+                        </div>
+                        
+                    </div>
+            </div>             -->
+
+            <div class="column"><div class="col-name">col</div><div class="column-inner"><div class="task">1</div><div class="task">2</div><div class="task">3</div></div>
+                    <!-- <div class="column-inner">
+                        <div class="task">task3</div>
+                    </div> -->
+                    <div class="add-element">
+                    <button class="add-element-offer add-task">+ добавить еще одну карточку</button>         
+                    <div class="new-element hideBlock">
+                            <textarea class="elementName" name="element-name" rows="2" placeholder="Введите название карточки"></textarea>
+                    </div>
+                    <div class="buttons hideBlock">
+                        <button class="add-element-confirm add-task-confirm">Добавить карточку</button>
                         <button class="add-element-reject">X</button>
                     </div>
-            </div>            
+                    </div>
+            </div>
+
+
         </div>
         <script src="script.js"></script>
     </body>
