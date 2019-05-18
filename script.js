@@ -84,7 +84,7 @@ var addNewTask = function () {
 kanban.onclick = function (event) {
     var target = event.target;
 
-    // если попали в свг, надо найти его родителя - обычного элемента
+    // если попали в свг, надо найти его родителя - обычный элемент
     if (target instanceof SVGElement) {
         target = getParentforSVG.apply(target);
     };
@@ -114,6 +114,7 @@ kanban.onselectstart = function (e) { e.preventDefault() };
 
 var MoveTask100ms = debounce(moveTask, 100);
 kanban.onmousedown = function (event) {
+    debugger;
     MoveTask100ms(event)
 };
 
@@ -144,11 +145,12 @@ function moveTask(event) { // 1. отследить нажатие
     var target = event.target;
 
     if (target.classList.contains('task')) {
+        // debugger;
         // запомнить, из какого контейнера достали
         colFrom = getParent.call(target, 'column');
         colInnerFrom = getParent.call(target, 'column-inner');
-        debugger;
-        nextTaskFrom = target.nextSibling;
+        nextTaskFrom = getNextTask(target, colInnerFrom);
+        // nextTaskFrom = target.nextSibling;
 
         // разместить на том же месте, но в абсолютных координатах
         marginLeft = Number(window.getComputedStyle(target).getPropertyValue('margin-left').replace(/\D/g, ''));
@@ -176,7 +178,7 @@ function moveTask(event) { // 1. отследить нажатие
         }
 
         
-        showBlankSpotAtNewPos = showNewTaskPosition(nextTaskFrom);
+        showBlankSpotAtNewPos = showNewTaskPosition(nextTaskFrom, colInnerFrom);
 
         // перемещать по экрану
         document.onmousemove = function (event) {
@@ -219,15 +221,19 @@ function moveTask(event) { // 1. отследить нажатие
     };
 }
 
+// initialNextTask == newNextTask == undefined
+// initialInner != targetInnerCol
+
+
 // вставлять пустой контейнер размером с task, если позиция контейнера должна измениться
-function showNewTaskPosition(task) {
+function showNewTaskPosition(initialNextTask, initialInner) {
     // предыдущий элемент, перед которым встал бы движущийся таск при  onmouseup
-    var nextTask = task;
+    var nextTask = initialNextTask;
     var blankSpot;
 
     return function (target, event) {
         // целевой контейнер
-        debugger;
+        // debugger;
         NodesUnderCursor = document.elementsFromPoint(event.pageX, event.pageY);
         targetCol = NodesUnderCursor.find((elem) => elem.classList.contains("column"));
 
@@ -236,10 +242,15 @@ function showNewTaskPosition(task) {
             newNextTask = getNewTaskPos(targetInnerCol, event.pageY);
 
             // если след. nexTask отличается от старого, то вставить туда пустой контейнер
-            if (newNextTask != nextTask) {
-                deleteChild(blankSpot);
-                blankSpot = insertBlankSpot(targetInnerCol, target, newNextTask);
-                nextTask = newNextTask;
+            // if (((newNextTask != nextTask) || (newNextTask == undefined)) && (newNextTask != initialNextTask)) {
+            if (
+                    ((nextTask != newNextTask) && (newNextTask != initialNextTask))
+                    || ((initialNextTask == newNextTask) && (initialInner != targetInnerCol))
+                    || ((nextTask == newNextTask) && (initialInner != targetInnerCol))
+                ) {
+                    deleteChild(blankSpot);
+                    blankSpot = insertBlankSpot(targetInnerCol, target, newNextTask);
+                    nextTask = newNextTask;
             }
         }
         else {
@@ -315,3 +326,12 @@ function deleteChild(child) {
         }
     }
 };
+
+function getNextTask(target, colInnerFrom) {
+    a = Array.from(colInnerFrom.children);
+    NextTaskIndex = a.findIndex((elem) => elem == target) + 1;
+    if (a[NextTaskIndex]) {
+        return a[NextTaskIndex]
+    }    
+}
+      
