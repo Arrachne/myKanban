@@ -42,7 +42,81 @@ kanban.onclick = function (event) {
 kanban.onselectstart = function (event) { event.preventDefault() };
 
 // двигать таск
-kanban.onmousedown = function (event) { moveTask(event) };
+kanban.onmousedown = function (event) {
+    // правая кнопка мыши не интересует
+    if (event.button === 2) {
+        return
+    };
+
+    var target = event.target;
+
+    if (target.classList.contains('task')) {
+        // запомнить, из какого контейнера достали
+        var colInnerFrom = getParent.call(target, 'column-inner');
+        var nextTaskFrom = getNextTask(target, colInnerFrom);
+
+        // разместить на том же месте, но в абсолютных координатах
+        var marginLeft = Number(window.getComputedStyle(target).getPropertyValue('margin-left').replace(/\D/g, ''));
+        var marginTop = Number(window.getComputedStyle(target).getPropertyValue('margin-top').replace(/\D/g, ''));
+        target.style.width = target.offsetWidth - 2 * marginLeft + 'px';
+        target.style.height = target.offsetHeight - 2 * marginTop + 'px';
+        target.classList.add('dragging');
+        target.style.position = 'absolute';
+        moveAt(event);
+
+        // переместим в body, чтобы таск был точно не внутри position:relative
+        document.body.appendChild(target);
+
+        target.style.zIndex = 1000; // показывать таск над другими элементами
+
+        // передвинуть таск под координаты курсора и сдвинуть на половину ширины/высоты для центрирования
+        function moveAt(event) {
+            target.style.left = event.pageX - target.offsetWidth / 2 + 'px';
+            target.style.top = event.pageY - target.offsetHeight / 2 + 'px';
+        }
+
+        // вставить пустой контейнер там, откуда взяли таск
+        showBlankSpotAtNewPos = showNewTaskPosition(nextTaskFrom);
+
+        // перемещать по экрану
+        document.onmousemove = function (event) {
+            moveAt(event);
+            showBlankSpotAtNewPos(target, event);
+        }
+
+        // отследить окончание переноса
+        target.onmouseup = function (event) {
+            dropTask(event, target);
+            deleteBlankSpot(target);
+        };
+    };
+};
+
+function dropTask(event, target) {
+    document.onmousemove = null;
+
+    // целевой контейнер
+    var NodesUnderCursor = document.elementsFromPoint(event.pageX, event.pageY);
+    var targetCol = NodesUnderCursor.find((elem) => elem.classList.contains("column"));
+
+    // если отпустили на колонке, и в ней есть иннер, вставить после ближайшего таска
+    if ((targetCol) && (targetInnerCol = targetCol.querySelector('.column-inner'))) {
+        insertInInner(targetInnerCol, target, event.pageY);
+    }
+    // если отпустили не на колонке, вернуть обратно
+    else {
+        if (nextTaskFrom) {
+            colInnerFrom.insertBefore(target, nextTaskFrom);
+        }
+        else {
+            colInnerFrom.appendChild(target);
+        }
+    };
+
+    target.classList.remove('dragging');
+    target.style.position = 'inherit';
+    target.onmouseup = null;
+};
 
 var addNewColumnOffer = function () {
     var newColForm = getParent.call(this, 'add-element');
@@ -126,82 +200,6 @@ var createNewCol = function () {
 
     newCol.innerHTML = inner;
     kanban.appendChild(newCol);
-};
-
-function moveTask(event) {
-    // правая кнопка мыши не интересует
-    if (event.button === 2) {
-        return
-    };
-
-    var target = event.target;
-
-    if (target.classList.contains('task')) {
-        // запомнить, из какого контейнера достали
-        var colInnerFrom = getParent.call(target, 'column-inner');
-        var nextTaskFrom = getNextTask(target, colInnerFrom);
-
-        // разместить на том же месте, но в абсолютных координатах
-        var marginLeft = Number(window.getComputedStyle(target).getPropertyValue('margin-left').replace(/\D/g, ''));
-        var marginTop = Number(window.getComputedStyle(target).getPropertyValue('margin-top').replace(/\D/g, ''));
-        target.style.width = target.offsetWidth - 2 * marginLeft + 'px';
-        target.style.height = target.offsetHeight - 2 * marginTop + 'px';
-        target.classList.add('dragging');
-        target.style.position = 'absolute';
-        moveAt(event);
-
-        // переместим в body, чтобы таск был точно не внутри position:relative
-        document.body.appendChild(target);
-
-        target.style.zIndex = 1000; // показывать таск над другими элементами
-
-        // передвинуть таск под координаты курсора и сдвинуть на половину ширины/высоты для центрирования
-        function moveAt(event) {
-            target.style.left = event.pageX - target.offsetWidth / 2 + 'px';
-            target.style.top = event.pageY - target.offsetHeight / 2 + 'px';
-        }
-
-        // вставить пустой контейнер там, откуда взяли таск
-        showBlankSpotAtNewPos = showNewTaskPosition(nextTaskFrom);
-
-        // перемещать по экрану
-        document.onmousemove = function (event) {
-            moveAt(event);
-            showBlankSpotAtNewPos(target, event);
-        }
-
-        // отследить окончание переноса
-        target.onmouseup = function (event) {
-            dropTask(event, target);
-            deleteBlankSpot(target);
-        };
-    };
-};
-
-function dropTask(event, target) {
-    document.onmousemove = null;
-
-    // целевой контейнер
-    var NodesUnderCursor = document.elementsFromPoint(event.pageX, event.pageY);
-    var targetCol = NodesUnderCursor.find((elem) => elem.classList.contains("column"));
-
-    // если отпустили на колонке, и в ней есть иннер, вставить после ближайшего таска
-    if ((targetCol) && (targetInnerCol = targetCol.querySelector('.column-inner'))) {
-        insertInInner(targetInnerCol, target, event.pageY);
-    }
-    // если отпустили не на колонке, вернуть обратно
-    else {
-        if (nextTaskFrom) {
-            colInnerFrom.insertBefore(target, nextTaskFrom);
-        }
-        else {
-            colInnerFrom.appendChild(target);
-        }
-    };
-
-    target.classList.remove('dragging');
-    target.style.position = 'inherit';
-    target.onmouseup = null;
 };
 
 function deleteBlankSpot(target) {
