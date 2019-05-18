@@ -1,15 +1,4 @@
-
-// TODO: при взятии таска его размер шрифта меняется
-
 var kanban = document.querySelector(".kanban");
-
-var getParent = function (parentName) {
-    parent = this.parentNode;
-    while ((!parent.classList.contains(parentName)) && (parent != document.body)) {
-        parent = parent.parentNode;
-    }
-    return parent
-};
 
 var addNewColumnOffer = function () {
     newColForm = getParent.call(this, 'add-element');
@@ -28,8 +17,8 @@ var rejectAddingColumn = function () {
 
 var compileCreateForm = function (formHTML, entityType) {
     let compiled = '';
-    switch(entityType) {
-        case 'task': 
+    switch (entityType) {
+        case 'task':
             compiled = formHTML.replace(/{{classType}}/gmi, 'task');
             compiled = compiled.replace(/{{entityType}}/gmi, 'карточку');
             compiled = compiled.replace(/{{entityTypeGenitive}}/gmi, 'карточки');
@@ -40,14 +29,18 @@ var compileCreateForm = function (formHTML, entityType) {
             compiled = compiled.replace(/{{entityType}}/gmi, 'колонку');
             compiled = compiled.replace(/{{entityTypeGenitive}}/gmi, 'колонки');
             compiled = compiled.replace(/{{rowsCount}}/gmi, '1');
-    };    
+    };
     return compiled
 };
 
 var createNewCol = function () {
     var newCol = document.createElement('div');
     newCol.classList.add("column");
-    newCol.innerHTML = compileCreateForm(document.getElementById('formCreate').innerHTML, 'column');
+
+    innerForm = compileCreateForm(document.getElementById('formCreateInner').innerHTML, 'column');
+    inner = document.getElementById('formCreate').innerHTML.replace(/{{formCreateInner}}/gmi, innerForm);
+
+    newCol.innerHTML = inner;
     kanban.appendChild(newCol);
 };
 
@@ -62,8 +55,8 @@ var addNewColumn = function () {
     // создать имя для текущей колонки    
     colName = document.createElement('div');
     colName.classList.add("col-name");
-    colName.textContent = thisCol.querySelector(".elementName").value; 
-    thisCol.insertBefore(colName, thisCol.firstChild);    
+    colName.textContent = thisCol.querySelector(".elementName").value;
+    thisCol.insertBefore(colName, thisCol.firstChild);
 
     // поменять форму создания в текущей колонке на создание таска
     thisCol.querySelector('.add-element').innerHTML = compileCreateForm(document.getElementById('formCreateInner').innerHTML, 'task');
@@ -80,16 +73,21 @@ var addNewTask = function () {
     // создать и вставить таск в колонку
     task = document.createElement('div');
     task.classList.add("task");
-    task.textContent = thisCol.querySelector(".elementName").value; 
+    task.textContent = thisCol.querySelector(".elementName").value;
     colInner.appendChild(task);
 
     // скрыть форму создания таска
     rejectAddingColumn.apply(getParent.call(this, 'column').querySelector(".add-element-reject"));
-    
+
 };
 
-kanban.onclick = function(event) {
+kanban.onclick = function (event) {
     var target = event.target;
+
+    // если попали в свг, надо найти его родителя - обычного элемента
+    if (target instanceof SVGElement) {
+        target = getParentforSVG.apply(target);
+    };
 
     if (target.classList.contains('add-element-offer')) {
         addNewColumnOffer.apply(target);
@@ -110,57 +108,94 @@ kanban.onclick = function(event) {
         addNewTask.apply(target);
         return;
     };
-  };  
+};
 
-kanban.onmousedown = function(event) { // 1. отследить нажатие
+kanban.onselectstart = function (e) { e.preventDefault() };
+
+var MoveTask100ms = debounce(moveTask, 100);
+kanban.onmousedown = function (event) {
+    MoveTask100ms(event)
+};
+
+function debounce(f, ms) {
+    var timer = null;
+
+    return function (event) {
+        var doIt = () => {
+            f.call(this, event);
+            timer = null;
+        }
+
+        if (timer) {
+            clearTimeout(timer);
+        }
+
+        timer = setTimeout(doIt, ms);
+    };
+}
+
+
+function moveTask(event) { // 1. отследить нажатие
     // правая кнопка мыши не интересует
     if (event.button === 2) {
         return
     };
 
-    var target = event.target; 
+    var target = event.target;
 
     if (target.classList.contains('task')) {
         // запомнить, из какого контейнера достали
+        colFrom = getParent.call(target, 'column');
         colInnerFrom = getParent.call(target, 'column-inner');
+        debugger;
         nextTaskFrom = target.nextSibling;
+
         // разместить на том же месте, но в абсолютных координатах
-        marginLeft = Number(window.getComputedStyle(target).getPropertyValue('margin-left').replace(/\D/g,''));
-        marginTop = Number(window.getComputedStyle(target).getPropertyValue('margin-top').replace(/\D/g,''));
+        marginLeft = Number(window.getComputedStyle(target).getPropertyValue('margin-left').replace(/\D/g, ''));
+        marginTop = Number(window.getComputedStyle(target).getPropertyValue('margin-top').replace(/\D/g, ''));
         target.style.width = target.offsetWidth - 2 * marginLeft + 'px';
         target.style.height = target.offsetHeight - 2 * marginTop + 'px';
+        target.classList.add('dragging');
         target.style.position = 'absolute';
+
+        // создать пустой контейнер, где был таск
+        prevBlankSpot = insertBlankSpot(colInnerFrom, target, nextTaskFrom);
+
         moveAt(event);
-        
+
         // переместим в body, чтобы таск был точно не внутри position:relative
         document.body.appendChild(target);
-    
+
         target.style.zIndex = 1000; // показывать таск над другими элементами
-    
+
         // передвинуть таск под координаты курсора
         // и сдвинуть на половину ширины/высоты для центрирования
         function moveAt(event) {
             target.style.left = event.pageX - target.offsetWidth / 2 + 'px';
             target.style.top = event.pageY - target.offsetHeight / 2 + 'px';
         }
-    
+
+        
+        showBlankSpotAtNewPos = showNewTaskPosition(nextTaskFrom);
+
         // перемещать по экрану
-        document.onmousemove = function(event) {
+        document.onmousemove = function (event) {
             moveAt(event);
+            showBlankSpotAtNewPos(target, event);
         }
-    
+
         // отследить окончание переноса
-        target.onmouseup = function(event) {
+        target.onmouseup = function (event) {
+
             document.onmousemove = null;
 
             // целевой контейнер
             NodesUnderCursor = document.elementsFromPoint(event.pageX, event.pageY);
-
-            debugger;
             targetCol = NodesUnderCursor.find((elem) => elem.classList.contains("column"));
-            // если отпустили на колонке, и в нем есть иннер, вставить после ближайшего таска
+
+            // если отпустили на колонке, и в ней есть иннер, вставить после ближайшего таска
             if ((targetCol) && (targetInnerCol = targetCol.querySelector('.column-inner'))) {
-                    insertInInner(targetInnerCol, target, event.pageY);      
+                insertInInner(targetInnerCol, target, event.pageY);
             }
             // если отпустили не на колонке, вернуть обратно
             else {
@@ -169,36 +204,114 @@ kanban.onmousedown = function(event) { // 1. отследить нажатие
                 }
                 else {
                     colInnerFrom.appendChild(target);
-                }                
+                }
             }
 
-            target.style.position = 'inherit';            
+            // удалить пустое место из-под таска
+            deleteChild(blankSpot);
+            deleteChild(prevBlankSpot);
+            target.classList.remove('dragging');
+
+            target.style.position = 'inherit';
             target.onmouseup = null;
         }
 
-    };    
+    };
 }
 
-function insertInInner(inner, task, y) { 
-    // debugger;
+// вставлять пустой контейнер размером с task, если позиция контейнера должна измениться
+function showNewTaskPosition(task) {
+    // предыдущий элемент, перед которым встал бы движущийся таск при  onmouseup
+    var nextTask = task;
+    var blankSpot;
+
+    return function (target, event) {
+        // целевой контейнер
+        debugger;
+        NodesUnderCursor = document.elementsFromPoint(event.pageX, event.pageY);
+        targetCol = NodesUnderCursor.find((elem) => elem.classList.contains("column"));
+
+        // если находимся на колонке, и в ней есть иннер, найти следующий nextTask
+        if ((targetCol) && (targetInnerCol = targetCol.querySelector('.column-inner'))) {
+            newNextTask = getNewTaskPos(targetInnerCol, event.pageY);
+
+            // если след. nexTask отличается от старого, то вставить туда пустой контейнер
+            if (newNextTask != nextTask) {
+                deleteChild(blankSpot);
+                blankSpot = insertBlankSpot(targetInnerCol, target, newNextTask);
+                nextTask = newNextTask;
+            }
+        }
+        else {
+            // удалить пред.пустой контейнер, если он есть
+            deleteChild(blankSpot);
+        };
+    }
+};
+
+// вставить пустой контейнер размером с task перед элементом nextTask
+function insertBlankSpot(inner, task, nextTask) {
+    blankSpot = document.createElement('div');
+    blankSpot.classList.add("task", "blank-spot");
+    blankSpot.style.height = task.style.height;
+    inner.insertBefore(blankSpot, nextTask);
+    return blankSpot
+};
+
+
+// вернуть элемент, перед которым встал бы таск, если его отпустить
+function getNewTaskPos(inner, y) {
     a = Array.from(inner.children);
-    nextTask = a.find((elem) => elem.offsetTop + elem.offsetHeight / 2 >= y);
+    nextTask = a.find((elem) => { return (!elem.classList.contains("blank-spot")) && (elem.offsetTop + elem.offsetHeight / 2 >= y) });
+    return nextTask
+}
+
+// вставить таск в inner
+function insertInInner(inner, task, y) {
+    // debugger;
+    nextTask = getNewTaskPos(inner, y)
     if (nextTask) {
-        inner.insertBefore(task, nextTask);    
+        inner.insertBefore(task, nextTask);
     }
     else {
         inner.appendChild(task);
     }
 }
 
-function show(element, childSelector) { 
-    element.querySelector(childSelector).classList.remove("hideBlock");
+function show(element, childSelector) {
+    element.querySelector(childSelector).classList.remove("hidden");
 }
 
-function hide(element, childSelector) { 
-    element.querySelector(childSelector).classList.add("hideBlock");
+function hide(element, childSelector) {
+    element.querySelector(childSelector).classList.add("hidden");
 }
 
-function clear(element, childSelector) { 
-    element.querySelector(childSelector).value = ''; 
+function clear(element, childSelector) {
+    element.querySelector(childSelector).value = '';
 }
+
+
+var getParent = function (parentName) {
+    parent = this.parentNode;
+    while ((!parent.classList.contains(parentName)) && (parent != document.body)) {
+        parent = parent.parentNode;
+    }
+    return parent
+};
+
+var getParentforSVG = function () {
+    parent = this.parentNode;
+    while ((parent instanceof SVGElement) && (parent != document.body)) {
+        parent = parent.parentNode;
+    }
+    return parent
+};
+
+function deleteChild(child) {
+    if (child) {
+        parent = child.parentNode;
+        if (parent) {
+            parent.removeChild(child);
+        }
+    }
+};
