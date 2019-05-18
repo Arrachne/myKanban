@@ -93,6 +93,7 @@ var addNewTask = function () {
 
 };
 
+// заменить "переменные" в шаблоне
 var compileCreateForm = function (formHTML, entityType) {
     let compiled = '';
     switch (entityType) {
@@ -122,7 +123,7 @@ var createNewCol = function () {
     kanban.appendChild(newCol);
 };
 
-function moveTask(event) { // 1. отследить нажатие
+function moveTask(event) {
     // правая кнопка мыши не интересует
     if (event.button === 2) {
         return
@@ -145,10 +146,6 @@ function moveTask(event) { // 1. отследить нажатие
         target.style.height = target.offsetHeight - 2 * marginTop + 'px';
         target.classList.add('dragging');
         target.style.position = 'absolute';
-
-        // создать пустой контейнер, где был таск
-        prevBlankSpot = insertBlankSpot(colInnerFrom, target, nextTaskFrom);
-
         moveAt(event);
 
         // переместим в body, чтобы таск был точно не внутри position:relative
@@ -156,15 +153,14 @@ function moveTask(event) { // 1. отследить нажатие
 
         target.style.zIndex = 1000; // показывать таск над другими элементами
 
-        // передвинуть таск под координаты курсора
-        // и сдвинуть на половину ширины/высоты для центрирования
+        // передвинуть таск под координаты курсора и сдвинуть на половину ширины/высоты для центрирования
         function moveAt(event) {
             target.style.left = event.pageX - target.offsetWidth / 2 + 'px';
             target.style.top = event.pageY - target.offsetHeight / 2 + 'px';
         }
 
         // вставить пустой контейнер там, откуда взяли таск
-        showBlankSpotAtNewPos = showNewTaskPosition(nextTaskFrom, colInnerFrom);
+        showBlankSpotAtNewPos = showNewTaskPosition(nextTaskFrom);
 
         // перемещать по экрану
         document.onmousemove = function (event) {
@@ -192,11 +188,11 @@ function moveTask(event) { // 1. отследить нажатие
                 else {
                     colInnerFrom.appendChild(target);
                 }
-            }
+            };
 
             // удалить пустые контейнеры из-под таска
             deleteChild(blankSpot);
-            deleteChild(prevBlankSpot);
+            // deleteChild(prevBlankSpot);
             target.classList.remove('dragging');
 
             target.style.position = 'inherit';
@@ -223,28 +219,25 @@ function debounce(f, ms) {
 };
 
 // вставлять пустой контейнер размером с task, если позиция контейнера должна измениться
-function showNewTaskPosition(initialNextTask, initialInner) {
+function showNewTaskPosition(initialNextTask) {
     // предыдущий элемент, перед которым встал бы движущийся таск при  onmouseup
     var nextTask = initialNextTask;
     var blankSpot;
 
     return function (target, event) {
         // целевой контейнер
-        // debugger;
         NodesUnderCursor = document.elementsFromPoint(event.pageX, event.pageY);
         targetCol = NodesUnderCursor.find((elem) => elem.classList.contains("column"));
 
         // если находимся на колонке, и в ней есть иннер, найти следующий nextTask
         if ((targetCol) && (targetInnerCol = targetCol.querySelector('.column-inner'))) {
-            // debugger;
             newNextTask = getNewTaskPos(targetInnerCol, event.pageY);
 
-            // если след. nexTask отличается от старого, то вставить туда пустой контейнер
-            if (
-                ((nextTask != newNextTask) && (newNextTask != initialNextTask))
-                || ((initialNextTask == newNextTask) && (initialInner != targetInnerCol))
-                || ((nextTask == newNextTask) && (initialInner != targetInnerCol))
-            ) {
+            // найти предыдущий контейнер таска
+            prevInner = nextTask ? getParent.call(nextTask, 'column-inner') : false;
+
+            // нарисовать пустой контейнер на месте, где встанет таск на onmouseup
+            if (!(prevInner) || (nextTask != newNextTask) || ((nextTask == newNextTask) && (targetInnerCol != prevInner))) {
                 deleteChild(blankSpot);
                 blankSpot = insertBlankSpot(targetInnerCol, target, newNextTask);
                 nextTask = newNextTask;
@@ -297,7 +290,7 @@ function clear(element, childSelector) {
     element.querySelector(childSelector).value = '';
 }
 
-function getParent (parentName) {
+function getParent(parentName) {
     parent = this.parentNode;
     while ((!parent.classList.contains(parentName)) && (parent != document.body)) {
         parent = parent.parentNode;
