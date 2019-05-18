@@ -1,5 +1,46 @@
 var kanban = document.querySelector(".kanban");
 
+kanban.onclick = function (event) {
+    var target = event.target;
+
+    // если попали в свг, надо найти его родителя - обычный элемент
+    if (target instanceof SVGElement) {
+        target = getParentforSVG.apply(target);
+    };
+
+    // показать форму добавления элемента
+    if (target.classList.contains('add-element-offer')) {
+        addNewColumnOffer.apply(target);
+        return;
+    };
+
+    // скрыть форму добавления элемента
+    if (target.classList.contains('add-element-reject')) {
+        rejectAddingColumn.apply(target);
+        return;
+    };
+
+    // создать новую колонку
+    if (target.classList.contains('add-column-confirm')) {
+        addNewColumn.apply(target);
+        return;
+    };
+
+    // создать новый таск
+    if (target.classList.contains('add-task-confirm')) {
+        addNewTask.apply(target);
+        return;
+    };
+};
+
+kanban.onselectstart = function (e) { e.preventDefault() };
+
+var MoveTask100ms = debounce(moveTask, 100);
+// двигать таск
+kanban.onmousedown = function (event) {
+    MoveTask100ms(event)
+};
+
 var addNewColumnOffer = function () {
     newColForm = getParent.call(this, 'add-element');
     hide(newColForm, ".add-element-offer");
@@ -13,35 +54,6 @@ var rejectAddingColumn = function () {
     hide(newColForm, ".new-element");
     clear(newColForm, ".elementName");
     hide(newColForm, ".buttons");
-};
-
-var compileCreateForm = function (formHTML, entityType) {
-    let compiled = '';
-    switch (entityType) {
-        case 'task':
-            compiled = formHTML.replace(/{{classType}}/gmi, 'task');
-            compiled = compiled.replace(/{{entityType}}/gmi, 'карточку');
-            compiled = compiled.replace(/{{entityTypeGenitive}}/gmi, 'карточки');
-            compiled = compiled.replace(/{{rowsCount}}/gmi, '2');
-            break;
-        default:
-            compiled = formHTML.replace(/{{classType}}/gmi, 'column');
-            compiled = compiled.replace(/{{entityType}}/gmi, 'колонку');
-            compiled = compiled.replace(/{{entityTypeGenitive}}/gmi, 'колонки');
-            compiled = compiled.replace(/{{rowsCount}}/gmi, '1');
-    };
-    return compiled
-};
-
-var createNewCol = function () {
-    var newCol = document.createElement('div');
-    newCol.classList.add("column");
-
-    innerForm = compileCreateForm(document.getElementById('formCreateInner').innerHTML, 'column');
-    inner = document.getElementById('formCreate').innerHTML.replace(/{{formCreateInner}}/gmi, innerForm);
-
-    newCol.innerHTML = inner;
-    kanban.appendChild(newCol);
 };
 
 var addNewColumn = function () {
@@ -81,60 +93,34 @@ var addNewTask = function () {
 
 };
 
-kanban.onclick = function (event) {
-    var target = event.target;
-
-    // если попали в свг, надо найти его родителя - обычный элемент
-    if (target instanceof SVGElement) {
-        target = getParentforSVG.apply(target);
+var compileCreateForm = function (formHTML, entityType) {
+    let compiled = '';
+    switch (entityType) {
+        case 'task':
+            compiled = formHTML.replace(/{{classType}}/gmi, 'task');
+            compiled = compiled.replace(/{{entityType}}/gmi, 'карточку');
+            compiled = compiled.replace(/{{entityTypeGenitive}}/gmi, 'карточки');
+            compiled = compiled.replace(/{{rowsCount}}/gmi, '2');
+            break;
+        default:
+            compiled = formHTML.replace(/{{classType}}/gmi, 'column');
+            compiled = compiled.replace(/{{entityType}}/gmi, 'колонку');
+            compiled = compiled.replace(/{{entityTypeGenitive}}/gmi, 'колонки');
+            compiled = compiled.replace(/{{rowsCount}}/gmi, '1');
     };
-
-    if (target.classList.contains('add-element-offer')) {
-        addNewColumnOffer.apply(target);
-        return;
-    };
-
-    if (target.classList.contains('add-element-reject')) {
-        rejectAddingColumn.apply(target);
-        return;
-    };
-
-    if (target.classList.contains('add-column-confirm')) {
-        addNewColumn.apply(target);
-        return;
-    };
-
-    if (target.classList.contains('add-task-confirm')) {
-        addNewTask.apply(target);
-        return;
-    };
+    return compiled
 };
 
-kanban.onselectstart = function (e) { e.preventDefault() };
+var createNewCol = function () {
+    var newCol = document.createElement('div');
+    newCol.classList.add("column");
 
-var MoveTask100ms = debounce(moveTask, 100);
-kanban.onmousedown = function (event) {
-    debugger;
-    MoveTask100ms(event)
+    innerForm = compileCreateForm(document.getElementById('formCreateInner').innerHTML, 'column');
+    inner = document.getElementById('formCreate').innerHTML.replace(/{{formCreateInner}}/gmi, innerForm);
+
+    newCol.innerHTML = inner;
+    kanban.appendChild(newCol);
 };
-
-function debounce(f, ms) {
-    var timer = null;
-
-    return function (event) {
-        var doIt = () => {
-            f.call(this, event);
-            timer = null;
-        }
-
-        if (timer) {
-            clearTimeout(timer);
-        }
-
-        timer = setTimeout(doIt, ms);
-    };
-}
-
 
 function moveTask(event) { // 1. отследить нажатие
     // правая кнопка мыши не интересует
@@ -177,7 +163,7 @@ function moveTask(event) { // 1. отследить нажатие
             target.style.top = event.pageY - target.offsetHeight / 2 + 'px';
         }
 
-        
+        // вставить пустой контейнер там, откуда взяли таск
         showBlankSpotAtNewPos = showNewTaskPosition(nextTaskFrom, colInnerFrom);
 
         // перемещать по экрану
@@ -188,7 +174,6 @@ function moveTask(event) { // 1. отследить нажатие
 
         // отследить окончание переноса
         target.onmouseup = function (event) {
-
             document.onmousemove = null;
 
             // целевой контейнер
@@ -209,21 +194,33 @@ function moveTask(event) { // 1. отследить нажатие
                 }
             }
 
-            // удалить пустое место из-под таска
+            // удалить пустые контейнеры из-под таска
             deleteChild(blankSpot);
             deleteChild(prevBlankSpot);
             target.classList.remove('dragging');
 
             target.style.position = 'inherit';
             target.onmouseup = null;
+        };
+    };
+};
+
+function debounce(f, ms) {
+    var timer = null;
+
+    return function (event) {
+        var doIt = () => {
+            f.call(this, event);
+            timer = null;
         }
 
+        if (timer) {
+            clearTimeout(timer);
+        }
+
+        timer = setTimeout(doIt, ms);
     };
-}
-
-// initialNextTask == newNextTask == undefined
-// initialInner != targetInnerCol
-
+};
 
 // вставлять пустой контейнер размером с task, если позиция контейнера должна измениться
 function showNewTaskPosition(initialNextTask, initialInner) {
@@ -239,18 +236,18 @@ function showNewTaskPosition(initialNextTask, initialInner) {
 
         // если находимся на колонке, и в ней есть иннер, найти следующий nextTask
         if ((targetCol) && (targetInnerCol = targetCol.querySelector('.column-inner'))) {
+            // debugger;
             newNextTask = getNewTaskPos(targetInnerCol, event.pageY);
 
             // если след. nexTask отличается от старого, то вставить туда пустой контейнер
-            // if (((newNextTask != nextTask) || (newNextTask == undefined)) && (newNextTask != initialNextTask)) {
             if (
-                    ((nextTask != newNextTask) && (newNextTask != initialNextTask))
-                    || ((initialNextTask == newNextTask) && (initialInner != targetInnerCol))
-                    || ((nextTask == newNextTask) && (initialInner != targetInnerCol))
-                ) {
-                    deleteChild(blankSpot);
-                    blankSpot = insertBlankSpot(targetInnerCol, target, newNextTask);
-                    nextTask = newNextTask;
+                ((nextTask != newNextTask) && (newNextTask != initialNextTask))
+                || ((initialNextTask == newNextTask) && (initialInner != targetInnerCol))
+                || ((nextTask == newNextTask) && (initialInner != targetInnerCol))
+            ) {
+                deleteChild(blankSpot);
+                blankSpot = insertBlankSpot(targetInnerCol, target, newNextTask);
+                nextTask = newNextTask;
             }
         }
         else {
@@ -268,7 +265,6 @@ function insertBlankSpot(inner, task, nextTask) {
     inner.insertBefore(blankSpot, nextTask);
     return blankSpot
 };
-
 
 // вернуть элемент, перед которым встал бы таск, если его отпустить
 function getNewTaskPos(inner, y) {
@@ -301,8 +297,7 @@ function clear(element, childSelector) {
     element.querySelector(childSelector).value = '';
 }
 
-
-var getParent = function (parentName) {
+function getParent (parentName) {
     parent = this.parentNode;
     while ((!parent.classList.contains(parentName)) && (parent != document.body)) {
         parent = parent.parentNode;
@@ -332,6 +327,5 @@ function getNextTask(target, colInnerFrom) {
     NextTaskIndex = a.findIndex((elem) => elem == target) + 1;
     if (a[NextTaskIndex]) {
         return a[NextTaskIndex]
-    }    
+    }
 }
-      
