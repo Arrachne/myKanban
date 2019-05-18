@@ -5,55 +5,57 @@ kanban.onclick = function (event) {
 
     // если попали в свг, надо найти его родителя - обычный элемент
     if (target instanceof SVGElement) {
-        target = getParentforSVG.apply(target);
+        target = getParentforSVG(target);
     };
 
     // показать форму добавления элемента
     if (target.classList.contains('add-element-offer')) {
-        addNewColumnOffer.apply(target);
+        addNewColumnOffer(target);
         return;
     };
 
     // скрыть форму добавления элемента
     if (target.classList.contains('add-element-reject')) {
-        rejectAddingColumn.apply(target);
+        rejectAddingColumn(target);
         return;
     };
 
     // создать новую колонку
     if (target.classList.contains('add-column-confirm')) {
-        addNewColumn.apply(target);
+        addNewColumn(target);
         return;
     };
 
     // создать новый таск
     if (target.classList.contains('add-task-confirm')) {
-        addNewTask.apply(target);
+        addNewTask(target);
         return;
     };
 
     // при клике на таск ничего не должно быть
     if (target.classList.contains('task')) {
-        dropTask(event, target);
-        return
+        var colInnerFrom = getParent(target, 'column-inner');
+        dropTask(event, target, null, colInnerFrom);
+        return;
     };
 };
 
+// устранить выделение всех последующих объектов когда перетягиваем таск
 kanban.onselectstart = function (event) { event.preventDefault() };
 
 // двигать таск
 kanban.onmousedown = function (event) {
     // правая кнопка мыши не интересует
     if (event.button === 2) {
-        return
+        return;
     };
 
     var target = event.target;
 
     if (target.classList.contains('task')) {
         // запомнить, из какого контейнера достали
-        var colInnerFrom = getParent.call(target, 'column-inner');
-        var nextTaskFrom = getNextTask(target, colInnerFrom);
+        var colInnerFrom = getParent(target, 'column-inner');
+        var nextTaskFrom = getNextTask(target);
 
         // разместить на том же месте, но в абсолютных координатах
         var marginLeft = Number(window.getComputedStyle(target).getPropertyValue('margin-left').replace(/\D/g, ''));
@@ -86,13 +88,13 @@ kanban.onmousedown = function (event) {
 
         // отследить окончание переноса
         target.onmouseup = function (event) {
-            dropTask(event, target);
+            dropTask(event, target, nextTaskFrom, colInnerFrom);
             deleteBlankSpot(target);
         };
     };
 };
 
-function dropTask(event, target) {
+function dropTask(event, target, nextTaskFrom, colInnerFrom) {
     document.onmousemove = null;
 
     // целевой контейнер
@@ -110,7 +112,7 @@ function dropTask(event, target) {
         }
         else {
             colInnerFrom.appendChild(target);
-        }
+        };
     };
 
     target.classList.remove('dragging');
@@ -118,23 +120,23 @@ function dropTask(event, target) {
     target.onmouseup = null;
 };
 
-var addNewColumnOffer = function () {
-    var newColForm = getParent.call(this, 'add-element');
+function addNewColumnOffer(bttn) {
+    var newColForm = getParent(bttn, 'add-element');
     hide(newColForm, ".add-element-offer");
     show(newColForm, ".new-element");
     show(newColForm, ".buttons");
 };
 
-var rejectAddingColumn = function () {
-    var newColForm = getParent.call(this, 'add-element');
+function rejectAddingColumn(bttn) {
+    var newColForm = getParent(bttn, 'add-element');
     show(newColForm, ".add-element-offer");
     hide(newColForm, ".new-element");
     clear(newColForm, ".elementName");
     hide(newColForm, ".buttons");
 };
 
-var addNewColumn = function () {
-    var thisCol = getParent.call(this, 'column');
+function addNewColumn(bttn) {
+    var thisCol = getParent(bttn, 'column');
 
     // создать контейнер для тасков в текущей колонке
     var colName = document.createElement('div');
@@ -154,9 +156,9 @@ var addNewColumn = function () {
     createNewCol();
 };
 
-var addNewTask = function () {
+function addNewTask(bttn) {
     // контейннер для тасков
-    var thisCol = getParent.call(this, 'column');
+    var thisCol = getParent(bttn, 'column');
     var colInner = thisCol.querySelector('.column-inner');
 
     var taskText = thisCol.querySelector(".elementName").value;
@@ -168,12 +170,12 @@ var addNewTask = function () {
         colInner.appendChild(task);
 
         // скрыть форму создания таска
-        rejectAddingColumn.apply(getParent.call(this, 'column').querySelector(".add-element-reject"));
+        rejectAddingColumn(getParent(bttn, 'column').querySelector(".add-element-reject"));
     };
 };
 
 // заменить "переменные" в шаблоне
-var compileCreateForm = function (formHTML, entityType) {
+function compileCreateForm(formHTML, entityType) {
     let compiled = '';
     switch (entityType) {
         case 'task':
@@ -188,10 +190,10 @@ var compileCreateForm = function (formHTML, entityType) {
             compiled = compiled.replace(/{{entityTypeGenitive}}/gmi, 'колонки');
             compiled = compiled.replace(/{{rowsCount}}/gmi, '1');
     };
-    return compiled
+    return compiled;
 };
 
-var createNewCol = function () {
+function createNewCol() {
     var newCol = document.createElement('div');
     newCol.classList.add("column");
 
@@ -203,11 +205,11 @@ var createNewCol = function () {
 };
 
 function deleteBlankSpot(target) {
-    var inner = getParent.call(target, 'column-inner');
+    var inner = getParent(target, 'column-inner');
     var blankSpot = inner.querySelector('.blank-spot');
     if (blankSpot) {
         inner.removeChild(blankSpot);
-    }
+    };
 };
 
 // вставлять пустой контейнер размером с task, если позиция контейнера должна измениться
@@ -226,20 +228,22 @@ function showNewTaskPosition(initialNextTask) {
             var newNextTask = getNewTaskPos(targetInnerCol, event.pageY);
 
             // найти предыдущий контейнер таска
-            var prevInner = nextTask ? getParent.call(nextTask, 'column-inner') : false;
+            var prevInner = nextTask ? getParent(nextTask, 'column-inner') : false;
 
             // нарисовать пустой контейнер на месте, где встанет таск на onmouseup
-            if (!(prevInner) || (nextTask != newNextTask) || ((nextTask == newNextTask) && (targetInnerCol != prevInner))) {
+            var movedOnNewPlace = (nextTask != newNextTask);
+            var cannotDefinePrevPlace = ((nextTask == newNextTask) && (targetInnerCol != prevInner));
+            if (!prevInner || movedOnNewPlace || cannotDefinePrevPlace) {
                 deleteChild(blankSpot);
                 blankSpot = insertBlankSpot(targetInnerCol, target, newNextTask);
                 nextTask = newNextTask;
-            }
+            };
         }
         else {
             // удалить пред.пустой контейнер, если он есть
             deleteChild(blankSpot);
         };
-    }
+    };
 };
 
 // вставить пустой контейнер размером с task перед элементом nextTask
@@ -248,14 +252,17 @@ function insertBlankSpot(inner, task, nextTask) {
     blankSpot.classList.add("task", "blank-spot");
     blankSpot.style.height = task.style.height;
     inner.insertBefore(blankSpot, nextTask);
-    return blankSpot
+    return blankSpot;
 };
 
 // вернуть элемент, перед которым встал бы таск, если его отпустить
 function getNewTaskPos(inner, y) {
     var a = Array.from(inner.children);
-    var nextTask = a.find((elem) => { return (!elem.classList.contains("blank-spot")) && (elem.offsetTop + elem.offsetHeight / 2 >= y) });
-    return nextTask
+    var nextTask = a.find((elem) => {
+        var elemY = elem.offsetTop + elem.offsetHeight / 2;
+        return (!elem.classList.contains("blank-spot")) && (elemY >= y);
+    });
+    return nextTask;
 }
 
 // вставить таск в inner
@@ -266,7 +273,7 @@ function insertInInner(inner, task, y) {
     }
     else {
         inner.appendChild(task);
-    }
+    };
 }
 
 function show(element, childSelector) {
@@ -281,20 +288,20 @@ function clear(element, childSelector) {
     element.querySelector(childSelector).value = '';
 }
 
-function getParent(parentName) {
-    var parent = this.parentNode;
+function getParent(elem, parentName) {
+    var parent = elem.parentNode;
     while ((!parent.classList.contains(parentName)) && (parent != document.body)) {
         parent = parent.parentNode;
-    }
-    return parent
+    };
+    return parent;
 };
 
-var getParentforSVG = function () {
-    var parent = this.parentNode;
+function getParentforSVG(elem) {
+    var parent = elem.parentNode;
     while ((parent instanceof SVGElement) && (parent != document.body)) {
         parent = parent.parentNode;
-    }
-    return parent
+    };
+    return parent;
 };
 
 function deleteChild(child) {
@@ -302,14 +309,15 @@ function deleteChild(child) {
         var parent = child.parentNode;
         if (parent) {
             parent.removeChild(child);
-        }
-    }
+        };
+    };
 };
 
-function getNextTask(target, colInnerFrom) {
+function getNextTask(target) {
+    var colInnerFrom = getParent(target, 'column-inner');
     var a = Array.from(colInnerFrom.children);
     var NextTaskIndex = a.findIndex((elem) => elem == target) + 1;
     if (a[NextTaskIndex]) {
-        return a[NextTaskIndex]
-    }
+        return a[NextTaskIndex];
+    };
 }
